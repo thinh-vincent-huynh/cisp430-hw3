@@ -2,34 +2,6 @@
 #include <fstream>
 using namespace std;
 
-//work just like a singly linked list
-struct aqueue{
-    int key;
-    aqueue* next;
-    aqueue(int _key, aqueue* _next){
-        key = _key;
-        next = _next;
-    }
-};
-
-//enqueue at the end of queue
-void enqueue(aqueue *queue, int key){
-    while (queue->next){    // traverse through queue
-        queue = queue->next;
-    }
-    queue->next = new aqueue(key, nullptr);
-}
-
-//move front to the next one in queue, delete current front,
-//and return key of current front
-int dequeue(aqueue *&queue){
-    int _key = queue->key;
-    aqueue *curr = queue;
-    queue = queue->next;
-    delete curr;
-    return _key;
-}
-
 //a node struct is sufficient to model a tree
 struct node{
     int key;
@@ -44,8 +16,37 @@ struct node{
     }
 };
 
+//work just like a singly linked list
+struct aqueue{
+    node* tree;
+    aqueue* next;
+    aqueue(node* _tree, aqueue* _next){
+        tree = _tree;
+        next = _next;
+    }
+};
+
+//enqueue at the end of queue
+void enqueue(aqueue *queue, node *_tree){
+    while (queue->next){    // traverse through queue
+        queue = queue->next;
+    }
+    queue->next = new aqueue(_tree, nullptr);
+}
+
+//move front to the next one in queue, delete current front,
+//and return key of current front
+int dequeue(aqueue *&queue){
+    int _key = queue->tree->key;
+    aqueue *curr = queue;
+    queue = queue->next;
+    delete curr->tree;
+    delete curr;
+    return _key;
+}
+
 //shorten allocating new node
-node* newNode(int key){
+node *newNode(int key){
     return new node(key, 0, nullptr, nullptr);
 }
 
@@ -55,7 +56,7 @@ int max(int left, int right){
 }
 
 //update height
-int height(node* node){
+int height(node *node){
     if (!node){ //parent node was a leaf node
         return -1;
     }
@@ -63,7 +64,7 @@ int height(node* node){
 }
 
 //get balance to see whether to rotate
-int getBalance(node* node){
+int getBalance(node *node){
     return height(node->left) - height(node->right);
 }
 
@@ -99,7 +100,7 @@ node *rebalance(node *node){
             node->left = leftRotate(node->left);
         }
         return rightRotate(node);
-    } else if (balance < 1){    //right heavy
+    }else if (balance < 1){    //right heavy
         if (getBalance(node->right) > 0){   //inside
             node->right = rightRotate(node->right);
         }
@@ -127,12 +128,36 @@ node* insert(node* node, int key)
     return node;
 }
 
-//print
+//process and print
 int main(){
-    ifstream in("input.txt");
-    aqueue *currLevel = nullptr, *nextLevel = nullptr;
-    node* tree;
-    int key;
+    //initializations
+    ifstream in("input.txt");   //file
+    int key;                    //insert
+    node *tree = nullptr;       //tree
+    aqueue *currLevel = nullptr, *nextLevel = nullptr;  //print
 
+    //population from file and insert to tree
     in >> key;
+    tree = insert(tree, key);
+    while (in >> key){
+        tree = insert(tree, key);
+    }
+
+    //print
+    enqueue(currLevel, tree);
+    while (currLevel){
+        while (currLevel){
+            cout << currLevel->tree->key << "(" << currLevel->tree->height
+                 << "," << getBalance(currLevel->tree) << ")\t";
+            if (currLevel->tree->left){
+                enqueue(nextLevel, tree->left);
+            }
+            if (currLevel->tree->right){
+                enqueue(nextLevel, tree->right);
+            }
+            dequeue(currLevel);
+        }
+        currLevel = nextLevel;
+        nextLevel = nullptr;
+    }
 }
