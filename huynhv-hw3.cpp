@@ -39,15 +39,12 @@ void enqueue(aqueue *&queue, node *tree){
     }
 }
 
-//move front to the next one in queue, delete current front,
-//and return key of current front
-int dequeue(aqueue *&queue){
-    int _key = queue->tree->key;
+//move front to the next one in queue and delete current front
+void dequeue(aqueue *&queue){
     aqueue *curr = queue;
     queue = queue->next;
     delete curr->tree;
     delete curr;
-    return _key;
 }
 
 //shorten allocating new node
@@ -142,9 +139,7 @@ int main(){
     aqueue *currLevel = nullptr, *nextLevel = nullptr;  //print
 
     //population from file and insert to tree
-    in >> key;
-    tree = insert(tree, key);
-    while (in >> key){  //process until end of file
+    while (in >> key){
         tree = insert(tree, key);
     }
 
