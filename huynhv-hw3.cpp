@@ -27,11 +27,16 @@ struct aqueue{
 };
 
 //enqueue at the end of queue
-void enqueue(aqueue *queue, node *_tree){
-    while (queue->next){    // traverse through queue
-        queue = queue->next;
+void enqueue(aqueue *&queue, node *tree){
+    if (!queue){            //empty queue
+        queue = new aqueue(tree, nullptr);
+    }else{
+        aqueue *curr = queue;
+        while (curr->next){ //traverse through queue
+            curr = curr->next;
+        }
+        curr->next = new aqueue(tree, nullptr);
     }
-    queue->next = new aqueue(_tree, nullptr);
 }
 
 //move front to the next one in queue, delete current front,
@@ -94,13 +99,13 @@ node *rightRotate(node *x){
 node *rebalance(node *node){
     node->height = max(height(node->left), height(node->right)) + 1;
     int balance = getBalance(node); //node->left - node->right
-    
+
     if (balance > 1){   //left heavy
         if (getBalance(node->left) < 0){    //inside
             node->left = leftRotate(node->left);
         }
         return rightRotate(node);
-    }else if (balance < 1){    //right heavy
+    }else if (balance < -1){    //right heavy
         if (getBalance(node->right) > 0){   //inside
             node->right = rightRotate(node->right);
         }
@@ -117,7 +122,7 @@ node* insert(node* node, int key)
     if (node == nullptr){
         return newNode(key);
     }
-    
+
     if (key < node->key){
         node->left = insert(node->left, key);
     }else{
@@ -139,25 +144,27 @@ int main(){
     //population from file and insert to tree
     in >> key;
     tree = insert(tree, key);
-    while (in >> key){
+    while (in >> key){  //process until end of file
         tree = insert(tree, key);
     }
 
     //print
     enqueue(currLevel, tree);
-    while (currLevel){
-        while (currLevel){
+    while (currLevel){  //process if there are still childrens left
+        while (currLevel){  //process all nodes in currLevel
             cout << currLevel->tree->key << "(" << currLevel->tree->height
                  << "," << getBalance(currLevel->tree) << ")\t";
-            if (currLevel->tree->left){
-                enqueue(nextLevel, tree->left);
+            if (currLevel->tree->left){     //push left child into nextLevel
+                enqueue(nextLevel, currLevel->tree->left);
             }
-            if (currLevel->tree->right){
-                enqueue(nextLevel, tree->right);
+            if (currLevel->tree->right){    //push right child into nextLevel
+                enqueue(nextLevel, currLevel->tree->right);
             }
             dequeue(currLevel);
         }
-        currLevel = nextLevel;
-        nextLevel = nullptr;
+        currLevel = nextLevel;  //move onto nextLevel
+        nextLevel = nullptr;    //empty it for the next level
+        cout << endl;
     }
+    return 0;
 }
